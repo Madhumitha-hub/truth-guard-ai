@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user) { void redirect({ to: "/dashboard", throw: false }); navigate({ to: "/dashboard" }); }
+  if (user) navigate({ to: "/dashboard" });
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
