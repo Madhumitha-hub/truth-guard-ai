@@ -61,11 +61,10 @@ async function runAnalysis(
     messages: [
       {
         role: "user",
-        // @ts-expect-error - multimodal content parts
         content: [
           { type: "text", text: `Analyse this ${mediaType} for signs of deepfake or AI manipulation. Be objective and rigorous.` },
           ...mediaParts,
-        ],
+        ] as never,
       },
     ],
     experimental_output: Output.object({ schema: DetectionAnalysisSchema }),
