@@ -48,8 +48,7 @@ function Dashboard() {
 
   const byType = ["image", "video", "audio"].map(t => ({
     type: t,
-    // @ts-expect-error joined relation
-    count: rows.filter(r => r.media_files?.media_type === t).length,
+    count: rows.filter((r) => (r as { media_files?: { media_type?: string } }).media_files?.media_type === t).length,
   }));
 
   return (

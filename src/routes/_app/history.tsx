@@ -46,8 +46,7 @@ function HistoryPage() {
               </td></tr>
             )}
             {(data ?? []).map((r) => {
-              // @ts-expect-error joined
-              const mf = r.media_files;
+              const mf = (r as { media_files?: { media_type?: string; filename?: string } }).media_files;
               const Icon = mf?.media_type === "video" ? Video : mf?.media_type === "audio" ? AudioLines : ImageIcon;
               const VerdictIcon = r.prediction === "Authentic" ? ShieldCheck : r.prediction === "Fake" ? ShieldX : ShieldAlert;
               const verdictCls = r.prediction === "Authentic" ? "text-success" : r.prediction === "Fake" ? "text-destructive" : "text-warning";
