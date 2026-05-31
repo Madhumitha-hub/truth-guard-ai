@@ -175,15 +175,40 @@ function DetectPage() {
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="flex items-center gap-3">
-                {result.prediction === "Authentic" && <ShieldCheck className="h-8 w-8 text-success" />}
-                {result.prediction === "Suspicious" && <ShieldAlert className="h-8 w-8 text-warning" />}
-                {result.prediction === "Fake" && <ShieldX className="h-8 w-8 text-destructive" />}
-                <div>
-                  <div className="text-2xl font-bold">{result.prediction}</div>
-                  <div className="text-xs text-muted-foreground">Risk: {result.risk_level}</div>
-                </div>
-              </div>
+              {(() => {
+                const m = result.manipulation_score;
+                const aiBand = m < 30 ? "no" : m <= 65 ? "maybe" : "yes";
+                const badge =
+                  aiBand === "no"
+                    ? { text: "Not AI-Generated", cls: "bg-success/15 text-success border-success/30" }
+                    : aiBand === "maybe"
+                    ? { text: "Possibly AI-Generated", cls: "bg-warning/15 text-warning border-warning/30" }
+                    : { text: "AI-Generated / Deepfake", cls: "bg-destructive/15 text-destructive border-destructive/30" };
+                const noun = mediaType === "image" ? "image" : mediaType === "video" ? "video" : "audio clip";
+                const summary =
+                  aiBand === "no"
+                    ? `This ${noun} appears to be authentic — no clear signs of AI generation or manipulation.`
+                    : aiBand === "maybe"
+                    ? `This ${noun} shows some signs of manipulation — review carefully before trusting it.`
+                    : `This ${noun} is likely AI-generated or a deepfake.`;
+                return (
+                  <div className="flex items-start gap-3">
+                    {result.prediction === "Authentic" && <ShieldCheck className="h-8 w-8 text-success shrink-0" />}
+                    {result.prediction === "Suspicious" && <ShieldAlert className="h-8 w-8 text-warning shrink-0" />}
+                    {result.prediction === "Fake" && <ShieldX className="h-8 w-8 text-destructive shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-2xl font-bold">{result.prediction}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${badge.cls}`}>
+                          {badge.text}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">Risk: {result.risk_level}</div>
+                      <p className="text-sm mt-2">{summary}</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-3 gap-3">
                 <ScoreBar label="Authenticity" value={result.authenticity_score} tone="success" />
