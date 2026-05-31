@@ -81,7 +81,7 @@ function DetectPage() {
         const r = await fnImage({ data: { imageBase64: b64, mimeType: file.type, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       } else if (mediaType === "video") {
-        const frames = await extractVideoFrames(file, 6);
+        const frames = await extractVideoFrames(file, 4);
         setStage(3);
         const r = await fnVideo({ data: { framesBase64: frames, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
