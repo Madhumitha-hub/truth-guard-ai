@@ -142,23 +142,31 @@ async function callModel(
   modelId: string,
   system: string,
   userParts: MediaPart[],
+  timeoutMs = 45000,
 ): Promise<DetectionAnalysis> {
   const gateway = createLovableAiGatewayProvider(apiKey);
   const model = gateway(modelId);
 
-  const result = await generateText({
-    model,
-    system,
-    messages: [
-      {
-        role: "user",
-        content: userParts as never,
+  const result = await Promise.race([
+    generateText({
+      model,
+      system,
+      messages: [
+        {
+          role: "user",
+          content: userParts as never,
+        },
+      ],
+      providerOptions: {
+        lovable: { max_tokens: 2048, temperature: 0.2 },
       },
-    ],
-    providerOptions: {
-      lovable: { max_tokens: 4096, temperature: 0.2 },
-    },
-  });
+    }),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("AI model timed out — please try again")), timeoutMs),
+    ),
+  ]);
+
+
 
   let parsed: unknown;
   try {
