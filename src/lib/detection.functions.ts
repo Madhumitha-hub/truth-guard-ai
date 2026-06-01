@@ -208,37 +208,40 @@ async function runTwoPass(
   ];
   const first = await callModel(apiKey, modelId, SYSTEM_PROMPT, firstParts);
 
-  // Pass 2: reviewer re-examines the same media with the first verdict.
+  // Conditional reviewer pass: only run when the first pass said "Authentic"
+  // with low confidence — that's exactly the false-negative case we worry about
+  // for AI-generated media. Otherwise skip to keep latency under the gateway
+  // timeout.
+  const needsReview = first.prediction === "Authentic" && first.confidence_score < 80;
   let reviewed = first;
-  try {
-    const reviewerParts: MediaPart[] = [
-      {
-        type: "text",
-        text: `Previous analyst verdict:\n${JSON.stringify(first)}\n\nRe-examine the attached ${mediaType} and return your own JSON verdict.`,
-      },
-      ...mediaParts,
-    ];
-    const second = await callModel(apiKey, modelId, REVIEWER_PROMPT, reviewerParts);
+  if (needsReview) {
+    try {
+      const reviewerParts: MediaPart[] = [
+        {
+          type: "text",
+          text: `Previous analyst verdict:\n${JSON.stringify(first)}\n\nRe-examine the attached ${mediaType} and return your own JSON verdict.`,
+        },
+        ...mediaParts,
+      ];
+      const second = await callModel(apiKey, modelId, REVIEWER_PROMPT, reviewerParts);
 
-    // Conservative merge: take the HIGHER manipulation score, average confidence,
-    // prefer reviewer's explanation/findings if it raised the verdict.
-    const raisedBy = second.manipulation_score - first.manipulation_score;
-    const mergedManip = Math.max(first.manipulation_score, second.manipulation_score);
-    const mergedConf = Math.round((first.confidence_score + second.confidence_score) / 2);
-    const useSecond = raisedBy > 5;
-    reviewed = {
-      ...first,
-      manipulation_score: mergedManip,
-      authenticity_score: 100 - mergedManip,
-      confidence_score: mergedConf,
-      explanation: useSecond ? second.explanation : first.explanation,
-      findings: useSecond ? second.findings : first.findings,
-      prediction: first.prediction,
-      risk_level: first.risk_level,
-    };
-  } catch (e) {
-    // If reviewer fails, fall back to first-pass result.
-    console.warn("Reviewer pass failed, using first-pass result:", e);
+      const raisedBy = second.manipulation_score - first.manipulation_score;
+      const mergedManip = Math.max(first.manipulation_score, second.manipulation_score);
+      const mergedConf = Math.round((first.confidence_score + second.confidence_score) / 2);
+      const useSecond = raisedBy > 5;
+      reviewed = {
+        ...first,
+        manipulation_score: mergedManip,
+        authenticity_score: 100 - mergedManip,
+        confidence_score: mergedConf,
+        explanation: useSecond ? second.explanation : first.explanation,
+        findings: useSecond ? second.findings : first.findings,
+        prediction: first.prediction,
+        risk_level: first.risk_level,
+      };
+    } catch (e) {
+      console.warn("Reviewer pass failed, using first-pass result:", e);
+    }
   }
 
   return normalize(reviewed);
@@ -249,7 +252,7 @@ export const analyzeImage = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => ImageInput.parse(d))
   .handler(async ({ data }) => {
     const started = Date.now();
-    const model = "google/gemini-2.5-pro";
+    const model = "google/gemini-2.5-flash";
     const analysis = await runTwoPass(
       [{ type: "image", image: `data:${data.mimeType};base64,${data.imageBase64}`, mimeType: data.mimeType }],
       "image",
@@ -257,6 +260,7 @@ export const analyzeImage = createServerFn({ method: "POST" })
     );
     return { analysis, processingMs: Date.now() - started, model };
   });
+
 
 export const analyzeVideo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
