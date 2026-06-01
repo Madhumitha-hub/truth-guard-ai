@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { analyzeImage, analyzeVideo, analyzeAudio } from "@/lib/detection.functions";
-import { fileToBase64, extractVideoFrames } from "@/lib/media-utils";
+import { fileToBase64, extractVideoFrames, compressImageForAnalysis } from "@/lib/media-utils";
 import { IMAGE_MIME, VIDEO_MIME, AUDIO_MIME, MAX_BYTES, type MediaType, type DetectionAnalysis } from "@/lib/detection-types";
 import { buildJson, buildCsv, buildPdf, downloadBlob } from "@/lib/reports";
 
@@ -76,12 +76,12 @@ function DetectPage() {
       let model: string;
 
       if (mediaType === "image") {
-        const b64 = await fileToBase64(file);
+        const { base64, mimeType } = await compressImageForAnalysis(file);
         setStage(3);
-        const r = await fnImage({ data: { imageBase64: b64, mimeType: file.type, filename: file.name } });
+        const r = await fnImage({ data: { imageBase64: base64, mimeType, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       } else if (mediaType === "video") {
-        const frames = await extractVideoFrames(file, 8);
+        const frames = await extractVideoFrames(file, 6);
         setStage(3);
         const r = await fnVideo({ data: { framesBase64: frames, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
@@ -91,6 +91,7 @@ function DetectPage() {
         const r = await fnAudio({ data: { audioBase64: b64, mimeType: file.type, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       }
+
 
       setStage(4);
 
@@ -114,7 +115,12 @@ function DetectPage() {
       toast.success("Analysis complete");
     } catch (e) {
       console.error(e);
-      toast.error(e instanceof Error ? e.message : "Analysis failed");
+      const msg = e instanceof Error ? e.message : "Analysis failed";
+      const friendly = /timeout|timed out/i.test(msg)
+        ? "AI service is busy or the file is too large — please try again with a smaller file."
+        : msg;
+      toast.error(friendly);
+
     } finally {
       setRunning(false);
     }
