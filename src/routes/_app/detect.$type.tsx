@@ -81,7 +81,7 @@ function DetectPage() {
         const r = await fnImage({ data: { imageBase64: b64, mimeType: file.type, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       } else if (mediaType === "video") {
-        const frames = await extractVideoFrames(file, 4);
+        const frames = await extractVideoFrames(file, 8);
         setStage(3);
         const r = await fnVideo({ data: { framesBase64: frames, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
@@ -180,16 +180,16 @@ function DetectPage() {
                 const aiBand = m < 30 ? "no" : m <= 65 ? "maybe" : "yes";
                 const badge =
                   aiBand === "no"
-                    ? { text: "Not AI-Generated", cls: "bg-success/15 text-success border-success/30" }
+                    ? { text: "Likely Authentic", cls: "bg-success/15 text-success border-success/30" }
                     : aiBand === "maybe"
                     ? { text: "Possibly AI-Generated", cls: "bg-warning/15 text-warning border-warning/30" }
-                    : { text: "AI-Generated / Deepfake", cls: "bg-destructive/15 text-destructive border-destructive/30" };
+                    : { text: "Likely AI-Generated / Deepfake", cls: "bg-destructive/15 text-destructive border-destructive/30" };
                 const noun = mediaType === "image" ? "image" : mediaType === "video" ? "video" : "audio clip";
                 const summary =
                   aiBand === "no"
-                    ? `This ${noun} appears to be authentic — no clear signs of AI generation or manipulation.`
+                    ? `This ${noun} is likely authentic — no strong signs of AI generation detected. AI verification is probabilistic, not absolute.`
                     : aiBand === "maybe"
-                    ? `This ${noun} shows some signs of manipulation — review carefully before trusting it.`
+                    ? `This ${noun} shows possible signs of AI generation or manipulation — review carefully before trusting it.`
                     : `This ${noun} is likely AI-generated or a deepfake.`;
                 return (
                   <div className="flex items-start gap-3">
