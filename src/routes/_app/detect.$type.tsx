@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { analyzeImage, analyzeVideo, analyzeAudio } from "@/lib/detection.functions";
-import { fileToBase64, extractVideoFrames } from "@/lib/media-utils";
+import { fileToBase64, extractVideoFrames, compressImageForAnalysis } from "@/lib/media-utils";
 import { IMAGE_MIME, VIDEO_MIME, AUDIO_MIME, MAX_BYTES, type MediaType, type DetectionAnalysis } from "@/lib/detection-types";
 import { buildJson, buildCsv, buildPdf, downloadBlob } from "@/lib/reports";
 
