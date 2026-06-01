@@ -115,7 +115,12 @@ function DetectPage() {
       toast.success("Analysis complete");
     } catch (e) {
       console.error(e);
-      toast.error(e instanceof Error ? e.message : "Analysis failed");
+      const msg = e instanceof Error ? e.message : "Analysis failed";
+      const friendly = /timeout|timed out/i.test(msg)
+        ? "AI service is busy or the file is too large — please try again with a smaller file."
+        : msg;
+      toast.error(friendly);
+
     } finally {
       setRunning(false);
     }
