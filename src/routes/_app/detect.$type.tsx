@@ -76,12 +76,12 @@ function DetectPage() {
       let model: string;
 
       if (mediaType === "image") {
-        const b64 = await fileToBase64(file);
+        const { base64, mimeType } = await compressImageForAnalysis(file);
         setStage(3);
-        const r = await fnImage({ data: { imageBase64: b64, mimeType: file.type, filename: file.name } });
+        const r = await fnImage({ data: { imageBase64: base64, mimeType, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       } else if (mediaType === "video") {
-        const frames = await extractVideoFrames(file, 8);
+        const frames = await extractVideoFrames(file, 6);
         setStage(3);
         const r = await fnVideo({ data: { framesBase64: frames, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
@@ -91,6 +91,7 @@ function DetectPage() {
         const r = await fnAudio({ data: { audioBase64: b64, mimeType: file.type, filename: file.name } });
         analysis = r.analysis; processingMs = r.processingMs; model = r.model;
       }
+
 
       setStage(4);
 
