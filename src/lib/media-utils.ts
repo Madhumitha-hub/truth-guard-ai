@@ -12,6 +12,41 @@ export function fileToBase64(file: File | Blob): Promise<string> {
   });
 }
 
+// Downscale + recompress an image for AI analysis. Returns { base64, mimeType }.
+// Keeps the original file untouched (used only for the AI payload, not storage).
+export async function compressImageForAnalysis(
+  file: File,
+  maxEdge = 1280,
+  quality = 0.85,
+): Promise<{ base64: string; mimeType: string }> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Failed to load image"));
+      el.src = url;
+    });
+
+    const longEdge = Math.max(img.naturalWidth, img.naturalHeight);
+    const scale = longEdge > maxEdge ? maxEdge / longEdge : 1;
+    const w = Math.round(img.naturalWidth * scale);
+    const h = Math.round(img.naturalHeight * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas 2D context unavailable");
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    return { base64: dataUrl.slice(dataUrl.indexOf(",") + 1), mimeType: "image/jpeg" };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 // Extract N evenly-spaced frames from a video file as JPEG base64 strings.
 export async function extractVideoFrames(file: File, frameCount = 6): Promise<string[]> {
   const url = URL.createObjectURL(file);
