@@ -292,7 +292,8 @@ export const analyzeAudio = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => AudioInput.parse(d))
   .handler(async ({ data }) => {
     const started = Date.now();
-    const model = "google/gemini-2.5-pro";
+    const model = "google/gemini-2.5-flash";
+
     const analysis = await runTwoPass(
       [{ type: "file", data: data.audioBase64, mediaType: data.mimeType }],
       "audio",
