@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Shield, LayoutDashboard, Image as ImageIcon, Video, AudioLines, History, FileText, LogOut } from "lucide-react";
+import { Shield, LayoutDashboard, Image as ImageIcon, Video, AudioLines, History, FileText, LogOut, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app")({ component: AppLayout });
@@ -13,6 +13,7 @@ const NAV = [
   { to: "/detect/audio", label: "Audio Detection", icon: AudioLines },
   { to: "/history", label: "History", icon: History },
   { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/architecture", label: "Architecture", icon: Layers },
 ] as const;
 
 function AppLayout() {

@@ -15,7 +15,7 @@ export function fileToBase64(file: File | Blob): Promise<string> {
 // Downscale + recompress an image for AI analysis. Returns { base64, mimeType }.
 // Keeps the original file untouched (used only for the AI payload, not storage).
 export async function compressImageForAnalysis(
-  file: File,
+  file: File | Blob,
   maxEdge = 1280,
   quality = 0.85,
 ): Promise<{ base64: string; mimeType: string }> {
@@ -89,4 +89,85 @@ export async function extractVideoFrames(file: File, frameCount = 6): Promise<st
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+// ── Real-time capture helpers ─────────────────────────────────────────────
+
+// Capture a single photo from the user's webcam and return it as a JPEG File.
+export async function captureWebcamPhoto(): Promise<File> {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error("Webcam capture is not supported in this browser");
+  }
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+    audio: false,
+  });
+  try {
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.muted = true;
+    video.playsInline = true;
+    await video.play();
+    // small warm-up so the sensor exposes correctly
+    await new Promise((r) => setTimeout(r, 350));
+    const w = video.videoWidth || 1280;
+    const h = video.videoHeight || 720;
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(video, 0, 0, w, h);
+    const blob: Blob = await new Promise((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/jpeg", 0.9),
+    );
+    return new File([blob], `webcam-${Date.now()}.jpg`, { type: "image/jpeg" });
+  } finally {
+    stream.getTracks().forEach((t) => t.stop());
+  }
+}
+
+// Record audio from the microphone for `seconds` and return an audio File.
+// Caller can also stop early via the returned controller.
+export interface AudioRecorder {
+  promise: Promise<File>;
+  stop: () => void;
+}
+export function recordMicrophoneAudio(seconds = 10): AudioRecorder {
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+    return {
+      promise: Promise.reject(new Error("Microphone recording is not supported in this browser")),
+      stop: () => {},
+    };
+  }
+  let stopFn: () => void = () => {};
+  const promise = (async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime =
+      MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "";
+    const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const chunks: BlobPart[] = [];
+    rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+    const done = new Promise<File>((resolve) => {
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const type = rec.mimeType || "audio/webm";
+        const blob = new Blob(chunks, { type });
+        resolve(new File([blob], `mic-${Date.now()}.webm`, { type }));
+      };
+    });
+    rec.start();
+    const timer = setTimeout(() => { if (rec.state !== "inactive") rec.stop(); }, seconds * 1000);
+    stopFn = () => {
+      clearTimeout(timer);
+      if (rec.state !== "inactive") rec.stop();
+    };
+    return done;
+  })();
+  return {
+    promise,
+    stop: () => stopFn(),
+  };
 }
