@@ -36,12 +36,13 @@ function HistoryPage() {
               <th className="p-3">Manipulation</th>
               <th className="p-3">Confidence</th>
               <th className="p-3">Date</th>
+              <th className="p-3"></th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
+            {isLoading && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
             {!isLoading && (data ?? []).length === 0 && (
-              <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">
+              <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">
                 No scans yet. <Link to="/detect/$type" params={{ type: "image" }} className="text-primary hover:underline">Run your first one</Link>.
               </td></tr>
             )}
@@ -59,6 +60,9 @@ function HistoryPage() {
                   <td className="p-3 font-mono">{Number(r.manipulation_score).toFixed(1)}%</td>
                   <td className="p-3 font-mono">{Number(r.confidence_score).toFixed(1)}%</td>
                   <td className="p-3 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                  <td className="p-3">
+                    <Link to="/reports" hash={r.id} className="text-primary hover:underline text-xs">View report</Link>
+                  </td>
                 </tr>
               );
             })}
