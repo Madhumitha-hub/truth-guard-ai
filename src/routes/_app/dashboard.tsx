@@ -41,9 +41,9 @@ function Dashboard() {
   const suspicious = rows.filter(r => r.prediction === "Suspicious").length;
 
   const pie = [
-    { name: "Authentic", value: authentic, fill: "oklch(0.72 0.18 150)" },
-    { name: "Suspicious", value: suspicious, fill: "oklch(0.78 0.16 75)" },
-    { name: "Fake", value: fake, fill: "oklch(0.65 0.24 25)" },
+    { name: "Authentic", value: authentic, fill: "oklch(0.55 0.13 155)" },
+    { name: "Suspicious", value: suspicious, fill: "oklch(0.68 0.14 75)" },
+    { name: "Fake", value: fake, fill: "oklch(0.58 0.20 25)" },
   ];
 
   const byType = ["image", "video", "audio"].map(t => ({
@@ -75,7 +75,7 @@ function Dashboard() {
                   <Pie data={pie} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={4}>
                     {pie.map((p, i) => <Cell key={i} fill={p.fill} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "oklch(0.21 0.03 262)", border: "1px solid oklch(0.30 0.03 262)" }} />
+                  <Tooltip contentStyle={{ background: "white", border: "1px solid oklch(0.90 0.015 250)", borderRadius: 8 }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : <EmptyChart />}
@@ -87,11 +87,11 @@ function Dashboard() {
             {total > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={byType}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.30 0.03 262 / 0.4)" />
-                  <XAxis dataKey="type" stroke="oklch(0.70 0.03 250)" />
-                  <YAxis stroke="oklch(0.70 0.03 250)" allowDecimals={false} />
-                  <Tooltip contentStyle={{ background: "oklch(0.21 0.03 262)", border: "1px solid oklch(0.30 0.03 262)" }} />
-                  <Bar dataKey="count" fill="oklch(0.82 0.16 215)" radius={[6,6,0,0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.90 0.015 250)" />
+                  <XAxis dataKey="type" stroke="oklch(0.46 0.03 255)" />
+                  <YAxis stroke="oklch(0.46 0.03 255)" allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "white", border: "1px solid oklch(0.90 0.015 250)", borderRadius: 8 }} />
+                  <Bar dataKey="count" fill="oklch(0.30 0.09 260)" radius={[6,6,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : <EmptyChart />}
