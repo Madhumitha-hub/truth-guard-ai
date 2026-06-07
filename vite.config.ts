@@ -12,20 +12,4 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  nitro: {
-    preset: "netlify",
-  },
-  vite: {
-    build: {
-      rollupOptions: {
-        // Suppress harmless "use client" directive warnings from @tanstack, @radix-ui, sonner etc.
-        // Without this, Rollup exits with code 2 on Netlify during the server/nitro bundle step.
-        onwarn(warning, warn) {
-          if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
-          warn(warning);
-        },
-      },
-    },
-  },
 });
-
