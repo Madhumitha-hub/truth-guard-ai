@@ -62,13 +62,6 @@ function Landing() {
         <div className="absolute inset-0 grid-bg opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 md:py-32">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-primary animate-pulse-ring" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Powered by Lovable AI · Multimodal Forensics
-            </div>
             <h1 className="mt-6 text-4xl md:text-6xl font-bold tracking-tight">
               Protect digital trust with{" "}
               <span className="gradient-text">AI-powered</span> deepfake detection
